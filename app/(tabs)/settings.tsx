@@ -1,16 +1,29 @@
-import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import ScreenContainer from '@/components/screen-container';
 import ScreenHeader from '@/components/screen-header';
 import SectionCard from '@/components/section-card';
 import SettingsRow from '@/components/settings-row';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { useFastingStore } from '@/store/fasting-store';
+
+const GOAL_PRESETS = [12, 14, 16, 18, 20] as const;
 
 export default function SettingsScreen() {
-  const [goalReached, setGoalReached] = useState(true);
-  const [reminderStart, setReminderStart] = useState(false);
-  const [reminderEnd, setReminderEnd] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
+  const { goalHours, settings, setGoal, updateSetting } = useFastingStore();
+
+  function showGoalPicker() {
+    Alert.alert(
+      'Fasting Goal',
+      `Current goal: ${goalHours}h`,
+      [
+        ...GOAL_PRESETS.map((h) => ({
+          text: `${h}h${h === goalHours ? ' ✓' : ''}`,
+          onPress: () => setGoal(h),
+        })),
+        { text: 'Cancel', style: 'cancel' as const },
+      ],
+    );
+  }
 
   return (
     <ScreenContainer>
@@ -20,12 +33,13 @@ export default function SettingsScreen() {
         <SectionCard title="Fasting Goal">
           <SettingsRow
             label="Daily Goal"
-            value="16h"
-            onPress={() => Alert.alert('Daily Goal', 'Goal selection coming soon.')}
+            value={`${goalHours}h`}
+            onPress={showGoalPicker}
           />
           <SettingsRow
             label="Goal Presets"
-            onPress={() => Alert.alert('Presets', '12:12 · 14:10 · 16:8 · 18:6 · 20:4')}
+            value="12h – 20h"
+            onPress={showGoalPicker}
           />
           <SettingsRow
             label="Custom Goal"
@@ -37,20 +51,20 @@ export default function SettingsScreen() {
           <SettingsRow
             label="Goal Reached"
             isToggle
-            toggleValue={goalReached}
-            onToggleChange={setGoalReached}
+            toggleValue={settings.goalReachedNotif}
+            onToggleChange={(v) => updateSetting('goalReachedNotif', v)}
           />
           <SettingsRow
             label="Reminder to Start"
             isToggle
-            toggleValue={reminderStart}
-            onToggleChange={setReminderStart}
+            toggleValue={settings.reminderStart}
+            onToggleChange={(v) => updateSetting('reminderStart', v)}
           />
           <SettingsRow
             label="Reminder to End"
             isToggle
-            toggleValue={reminderEnd}
-            onToggleChange={setReminderEnd}
+            toggleValue={settings.reminderEnd}
+            onToggleChange={(v) => updateSetting('reminderEnd', v)}
           />
         </SectionCard>
 
@@ -58,8 +72,8 @@ export default function SettingsScreen() {
           <SettingsRow
             label="Dark Mode"
             isToggle
-            toggleValue={darkMode}
-            onToggleChange={setDarkMode}
+            toggleValue={settings.darkMode}
+            onToggleChange={(v) => updateSetting('darkMode', v)}
           />
           <SettingsRow
             label="Language"

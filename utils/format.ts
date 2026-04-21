@@ -13,7 +13,8 @@ export function formatDuration(seconds: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-export function formatTime12(date: Date): string {
+export function formatTime12(timestamp: number): string {
+  const date = new Date(timestamp);
   let h = date.getHours();
   const m = date.getMinutes();
   const ampm = h >= 12 ? 'PM' : 'AM';
@@ -21,7 +22,8 @@ export function formatTime12(date: Date): string {
   return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
-export function formatSessionDate(date: Date): string {
+export function formatSessionDate(timestamp: number): string {
+  const date = new Date(timestamp);
   if (isToday(date)) return 'Today';
   if (isYesterday(date)) return 'Yesterday';
   return format(date, 'MMM d, yyyy');

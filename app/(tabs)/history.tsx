@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   eachDayOfInterval,
   endOfMonth,
@@ -13,31 +13,35 @@ import ScreenHeader from '@/components/screen-header';
 import SegmentedControl from '@/components/segmented-control';
 import HistoryListItem from '@/components/history-list-item';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import { useFastingStore } from '@/store/fasting-store';
 import { MOCK_SESSIONS } from '@/utils/mock-data';
 import { formatDuration, formatSessionDate, formatTime12 } from '@/utils/format';
+import { FastingSession } from '@/types';
 
-const TODAY = new Date(2026, 3, 21);
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-function CalendarView() {
-  const monthStart = startOfMonth(TODAY);
-  const monthEnd = endOfMonth(TODAY);
+interface CalendarViewProps {
+  sessions: FastingSession[];
+}
+
+function CalendarView({ sessions }: CalendarViewProps) {
+  const today = new Date();
+  const monthStart = startOfMonth(today);
+  const monthEnd = endOfMonth(today);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const startPad = getDay(monthStart);
   const cells: (Date | null)[] = [...Array(startPad).fill(null), ...days];
 
   const sessionDaySet = new Set(
-    MOCK_SESSIONS.map((s) => format(s.endTime, 'yyyy-MM-dd')),
+    sessions.map((s) => format(new Date(s.endTime), 'yyyy-MM-dd')),
   );
 
   return (
     <View style={styles.calendarWrapper}>
-      <Text style={styles.monthLabel}>{format(TODAY, 'MMMM yyyy')}</Text>
+      <Text style={styles.monthLabel}>{format(today, 'MMMM yyyy')}</Text>
       <View style={styles.dayHeaders}>
         {DAY_LABELS.map((d, i) => (
-          <Text key={i} style={styles.dayHeader}>
-            {d}
-          </Text>
+          <Text key={i} style={styles.dayHeader}>{d}</Text>
         ))}
       </View>
       <View style={styles.grid}>
@@ -45,23 +49,19 @@ function CalendarView() {
           if (!date) return <View key={i} style={styles.cell} />;
           const key = format(date, 'yyyy-MM-dd');
           const hasFast = sessionDaySet.has(key);
-          const isToday = isSameDay(date, TODAY);
+          const isToday = isSameDay(date, today);
           return (
             <View key={key} style={styles.cell}>
-              <View
-                style={[
-                  styles.dayCell,
-                  hasFast && styles.dayCellFast,
-                  isToday && styles.dayCellToday,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.dayText,
-                    hasFast && styles.dayTextFast,
-                    isToday && styles.dayTextToday,
-                  ]}
-                >
+              <View style={[
+                styles.dayCell,
+                hasFast && styles.dayCellFast,
+                isToday && styles.dayCellToday,
+              ]}>
+                <Text style={[
+                  styles.dayText,
+                  hasFast && styles.dayTextFast,
+                  isToday && styles.dayTextToday,
+                ]}>
                   {date.getDate()}
                 </Text>
               </View>
@@ -75,6 +75,10 @@ function CalendarView() {
 
 export default function HistoryScreen() {
   const [tab, setTab] = useState(0);
+  const { sessions: storedSessions } = useFastingStore();
+
+  // Use real sessions if available, otherwise show mock data as fallback
+  const sessions = storedSessions.length > 0 ? storedSessions : MOCK_SESSIONS;
 
   return (
     <ScreenContainer>
@@ -87,7 +91,7 @@ export default function HistoryScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {tab === 0 ? (
           <>
-            <CalendarView />
+            <CalendarView sessions={sessions} />
             <View style={styles.divider} />
           </>
         ) : null}
@@ -96,16 +100,20 @@ export default function HistoryScreen() {
           {tab === 0 && (
             <Text style={styles.sectionLabel}>Recent Sessions</Text>
           )}
-          {MOCK_SESSIONS.map((session) => (
-            <HistoryListItem
-              key={session.id}
-              date={formatSessionDate(session.endTime)}
-              startTime={formatTime12(session.startTime)}
-              endTime={formatTime12(session.endTime)}
-              duration={formatDuration(session.durationSeconds)}
-              goalReached={session.goalReached}
-            />
-          ))}
+          {sessions.length === 0 ? (
+            <Text style={styles.emptyText}>No fasting sessions yet. Start your first fast!</Text>
+          ) : (
+            sessions.map((session) => (
+              <HistoryListItem
+                key={session.id}
+                date={formatSessionDate(session.endTime)}
+                startTime={formatTime12(session.startTime)}
+                endTime={formatTime12(session.endTime)}
+                duration={formatDuration(session.durationSeconds)}
+                goalReached={session.goalReached}
+              />
+            ))
+          )}
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -190,5 +198,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: Spacing.md,
+  },
+  emptyText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: Spacing.xl,
+    lineHeight: 24,
   },
 });

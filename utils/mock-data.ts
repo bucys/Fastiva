@@ -3,87 +3,21 @@ import { FastingSession, BarData } from '@/types';
 const Y = 2026;
 const APR = 3; // April (0-indexed)
 
+function ts(year: number, month: number, day: number, hour: number, minute = 0): number {
+  return new Date(year, month, day, hour, minute).getTime();
+}
+
 export const MOCK_SESSIONS: FastingSession[] = [
-  {
-    id: '1',
-    startTime: new Date(Y, APR, 20, 20, 0),
-    endTime: new Date(Y, APR, 21, 12, 0),
-    durationSeconds: 57600,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '2',
-    startTime: new Date(Y, APR, 18, 19, 30),
-    endTime: new Date(Y, APR, 19, 13, 30),
-    durationSeconds: 64800,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '3',
-    startTime: new Date(Y, APR, 17, 20, 0),
-    endTime: new Date(Y, APR, 18, 10, 0),
-    durationSeconds: 50400,
-    goalHours: 16,
-    goalReached: false,
-  },
-  {
-    id: '4',
-    startTime: new Date(Y, APR, 15, 21, 0),
-    endTime: new Date(Y, APR, 16, 13, 0),
-    durationSeconds: 57600,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '5',
-    startTime: new Date(Y, APR, 14, 20, 0),
-    endTime: new Date(Y, APR, 15, 12, 0),
-    durationSeconds: 57600,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '6',
-    startTime: new Date(Y, APR, 12, 20, 30),
-    endTime: new Date(Y, APR, 13, 11, 30),
-    durationSeconds: 54000,
-    goalHours: 16,
-    goalReached: false,
-  },
-  {
-    id: '7',
-    startTime: new Date(Y, APR, 11, 21, 0),
-    endTime: new Date(Y, APR, 12, 13, 0),
-    durationSeconds: 57600,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '8',
-    startTime: new Date(Y, APR, 10, 20, 0),
-    endTime: new Date(Y, APR, 11, 14, 0),
-    durationSeconds: 64800,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '9',
-    startTime: new Date(Y, APR, 8, 21, 0),
-    endTime: new Date(Y, APR, 9, 13, 0),
-    durationSeconds: 57600,
-    goalHours: 16,
-    goalReached: true,
-  },
-  {
-    id: '10',
-    startTime: new Date(Y, APR, 7, 20, 0),
-    endTime: new Date(Y, APR, 8, 12, 0),
-    durationSeconds: 57600,
-    goalHours: 16,
-    goalReached: true,
-  },
+  { id: '1',  startTime: ts(Y, APR, 20, 20), endTime: ts(Y, APR, 21, 12), durationSeconds: 57600,  goalHours: 16, goalReached: true },
+  { id: '2',  startTime: ts(Y, APR, 18, 19, 30), endTime: ts(Y, APR, 19, 13, 30), durationSeconds: 64800, goalHours: 16, goalReached: true },
+  { id: '3',  startTime: ts(Y, APR, 17, 20), endTime: ts(Y, APR, 18, 10), durationSeconds: 50400,  goalHours: 16, goalReached: false },
+  { id: '4',  startTime: ts(Y, APR, 15, 21), endTime: ts(Y, APR, 16, 13), durationSeconds: 57600,  goalHours: 16, goalReached: true },
+  { id: '5',  startTime: ts(Y, APR, 14, 20), endTime: ts(Y, APR, 15, 12), durationSeconds: 57600,  goalHours: 16, goalReached: true },
+  { id: '6',  startTime: ts(Y, APR, 12, 20, 30), endTime: ts(Y, APR, 13, 11, 30), durationSeconds: 54000, goalHours: 16, goalReached: false },
+  { id: '7',  startTime: ts(Y, APR, 11, 21), endTime: ts(Y, APR, 12, 13), durationSeconds: 57600,  goalHours: 16, goalReached: true },
+  { id: '8',  startTime: ts(Y, APR, 10, 20), endTime: ts(Y, APR, 11, 14), durationSeconds: 64800,  goalHours: 16, goalReached: true },
+  { id: '9',  startTime: ts(Y, APR, 8,  21), endTime: ts(Y, APR, 9,  13), durationSeconds: 57600,  goalHours: 16, goalReached: true },
+  { id: '10', startTime: ts(Y, APR, 7,  20), endTime: ts(Y, APR, 8,  12), durationSeconds: 57600,  goalHours: 16, goalReached: true },
 ];
 
 export const MOCK_WEEK_BARS: BarData[] = [

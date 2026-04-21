@@ -1,10 +1,22 @@
 export interface FastingSession {
   id: string;
-  startTime: Date;
-  endTime: Date;
+  startTime: number; // Unix ms timestamp
+  endTime: number;   // Unix ms timestamp
   durationSeconds: number;
   goalHours: number;
   goalReached: boolean;
+}
+
+export interface ActiveFast {
+  startTime: number; // Unix ms timestamp
+  goalHours: number; // snapshot of goal when fast started
+}
+
+export interface AppSettings {
+  goalReachedNotif: boolean;
+  reminderStart: boolean;
+  reminderEnd: boolean;
+  darkMode: boolean;
 }
 
 export interface BarData {

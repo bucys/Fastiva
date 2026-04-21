@@ -1,44 +1,87 @@
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, AppStateStatus, ScrollView, StyleSheet, Text, View } from 'react-native';
 import ScreenContainer from '@/components/screen-container';
 import CircularProgressTimer from '@/components/circular-progress-timer';
 import GoalPill from '@/components/goal-pill';
 import PrimaryButton from '@/components/primary-button';
 import SmallMetricCard from '@/components/small-metric-card';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { useFastingStore } from '@/store/fasting-store';
 import { MOCK_SESSIONS } from '@/utils/mock-data';
 import { formatDuration, formatElapsed } from '@/utils/format';
-
-const GOAL_HOURS = 16;
-const GOAL_SECONDS = GOAL_HOURS * 3600;
-
-const longestFastSeconds = Math.max(...MOCK_SESSIONS.map((s) => s.durationSeconds));
-const lastFastSeconds = MOCK_SESSIONS[0]?.durationSeconds ?? 0;
-const streak = 5;
+import {
+  computeStreak,
+  longestFast,
+  weeklyAverage,
+} from '@/utils/stats';
 
 export default function HomeScreen() {
-  const [isActive, setIsActive] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const startTimeRef = useRef<number | null>(null);
+  const {
+    activeFast,
+    goalHours,
+    sessions,
+    startFast,
+    endFast,
+    _hasHydrated,
+  } = useFastingStore();
 
-  useEffect(() => {
-    if (!isActive) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Compute elapsed from the persisted startTime whenever activeFast changes
+  function refreshElapsed() {
+    if (!activeFast) {
       setElapsedSeconds(0);
       return;
     }
-    startTimeRef.current = Date.now();
-    const id = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current!) / 1000));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [isActive]);
+    setElapsedSeconds(Math.floor((Date.now() - activeFast.startTime) / 1000));
+  }
 
-  const progress = elapsedSeconds / GOAL_SECONDS;
-  const goalReached = elapsedSeconds >= GOAL_SECONDS;
-  const remaining = Math.max(0, GOAL_SECONDS - elapsedSeconds);
+  useEffect(() => {
+    refreshElapsed();
 
-  function handleToggle() {
-    setIsActive((prev) => !prev);
+    if (!activeFast) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      return;
+    }
+
+    intervalRef.current = setInterval(refreshElapsed, 1000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFast]);
+
+  // Jump to correct time when app comes back to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') refreshElapsed();
+    });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFast]);
+
+  const goalSeconds = goalHours * 3600;
+  const progress = goalSeconds > 0 ? elapsedSeconds / goalSeconds : 0;
+  const goalReached = elapsedSeconds >= goalSeconds && !!activeFast;
+  const remaining = Math.max(0, goalSeconds - elapsedSeconds);
+
+  // Stats — prefer real sessions, fall back to mock when empty
+  const displaySessions = sessions.length > 0 ? sessions : MOCK_SESSIONS;
+  const streak = computeStreak(displaySessions);
+  const lastFastSec = displaySessions[0]?.durationSeconds ?? 0;
+  const longestSec = longestFast(displaySessions);
+  const weekAvgSec = weeklyAverage(displaySessions);
+
+  const isActive = _hasHydrated && !!activeFast;
+
+  async function handleToggle() {
+    if (isActive) {
+      await endFast();
+    } else {
+      await startFast();
+    }
   }
 
   return (
@@ -50,19 +93,19 @@ export default function HomeScreen() {
         {/* header */}
         <View style={styles.topSection}>
           <Text style={styles.currentFastLabel}>Current Fast</Text>
-          <GoalPill hours={GOAL_HOURS} />
+          <GoalPill hours={goalHours} />
         </View>
 
         {/* timer */}
         <View style={styles.timerSection}>
           <CircularProgressTimer
-            progress={progress}
-            elapsedSeconds={elapsedSeconds}
+            progress={_hasHydrated ? progress : 0}
+            elapsedSeconds={_hasHydrated ? elapsedSeconds : 0}
             isActive={isActive}
           />
         </View>
 
-        {/* status */}
+        {/* status line */}
         <View style={styles.statusSection}>
           {isActive ? (
             goalReached ? (
@@ -78,7 +121,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* button */}
+        {/* primary action */}
         <PrimaryButton
           label={isActive ? 'End Fast' : 'Start Fast'}
           onPress={handleToggle}
@@ -86,11 +129,20 @@ export default function HomeScreen() {
           style={styles.button}
         />
 
-        {/* stat cards */}
+        {/* bottom stat cards */}
         <View style={styles.statsRow}>
-          <SmallMetricCard label="Streak" value={`${streak}d`} />
-          <SmallMetricCard label="Last Fast" value={formatDuration(lastFastSeconds)} />
-          <SmallMetricCard label="Longest" value={formatDuration(longestFastSeconds)} />
+          <SmallMetricCard
+            label="Streak"
+            value={streak > 0 ? `${streak}d` : '—'}
+          />
+          <SmallMetricCard
+            label="Last Fast"
+            value={lastFastSec > 0 ? formatDuration(lastFastSec) : '—'}
+          />
+          <SmallMetricCard
+            label="Avg/Week"
+            value={weekAvgSec > 0 ? formatDuration(weekAvgSec) : '—'}
+          />
         </View>
       </ScrollView>
     </ScreenContainer>
