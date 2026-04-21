@@ -14,10 +14,11 @@ import {
   computeMonthBars,
   computeWeekBars,
   computeYearBars,
-  goalAchievementRate,
-  longestFast,
+  goalAchievementRateForPeriod,
+  longestFastForPeriod,
   StatsPeriod,
   totalDurationForPeriod,
+  totalFastsForPeriod,
 } from '@/utils/stats';
 
 const CHART_LABELS = ['Daily fasting hours', 'Weekly fasting hours', 'Monthly fasting hours'];
@@ -35,9 +36,9 @@ export default function StatsScreen() {
 
   const averageSec = averageDurationForPeriod(sessions, selectedPeriod);
   const totalDurationSec = totalDurationForPeriod(sessions, selectedPeriod);
-  const longestSec = longestFast(sessions);
-  const total = sessions.length;
-  const goalRate = goalAchievementRate(sessions);
+  const longestSec = longestFastForPeriod(sessions, selectedPeriod);
+  const total = totalFastsForPeriod(sessions, selectedPeriod);
+  const goalRate = goalAchievementRateForPeriod(sessions, selectedPeriod);
   const streak = computeStreak(sessions);
 
   // Only compute heavy chart data when needed
@@ -82,7 +83,7 @@ export default function StatsScreen() {
           </View>
           <View style={styles.gridRow}>
             <StatCard
-              label="Current Streak"
+              label="Overall Streak"
               value={streak > 0 ? `${streak}d` : '—'}
             />
             <StatCard

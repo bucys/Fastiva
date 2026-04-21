@@ -1,6 +1,7 @@
 import { FastingSession, BarData } from '@/types';
 
 export type StatsPeriod = 'week' | 'month' | 'year';
+export type SessionStatus = 'Goal met' | 'Partial' | 'Missed';
 
 function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -39,26 +40,61 @@ function roundChartHours(hours: number): number {
 
 export function computeStreak(sessions: FastingSession[]): number {
   if (!sessions.length) return 0;
-  const daySet = new Set(sessions.map((s) => dayKey(s.endTime)));
+  const goalDays = new Set(sessions.filter((s) => s.goalReached).map((s) => dayKey(s.endTime)));
+  if (!goalDays.size) return 0;
 
   let streak = 0;
   const cursor = new Date();
-  // Start checking from yesterday — today's fast may still be active
-  cursor.setDate(cursor.getDate() - 1);
+  if (!goalDays.has(dayKey(cursor.getTime()))) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
 
   for (let i = 0; i < 365; i++) {
-    if (!daySet.has(dayKey(cursor.getTime()))) break;
+    if (!goalDays.has(dayKey(cursor.getTime()))) break;
     streak++;
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
 }
 
+export function getSessionCompletionPercent(session: FastingSession): number {
+  const goalSeconds = session.goalHours * 3600;
+  if (goalSeconds <= 0) return 0;
+  return Math.round((session.durationSeconds / goalSeconds) * 100);
+}
+
+export function getSessionStatus(session: FastingSession): SessionStatus {
+  const percent = getSessionCompletionPercent(session);
+  if (percent >= 100) return 'Goal met';
+  if (percent >= 70) return 'Partial';
+  return 'Missed';
+}
+
+export function filterSessionsForPeriod(
+  sessions: FastingSession[],
+  period: StatsPeriod,
+  now = new Date(),
+): FastingSession[] {
+  let cutoff = 0;
+
+  if (period === 'week') cutoff = startOfWeek(now);
+  if (period === 'month') cutoff = startOfMonthTs(now);
+  if (period === 'year') cutoff = startOfYearTs(now);
+
+  return sessions.filter((session) => session.endTime >= cutoff);
+}
+
 export function weeklyAverage(sessions: FastingSession[]): number {
-  const cutoff = startOfWeek(new Date());
-  const recent = sessions.filter((s) => s.endTime >= cutoff);
+  const recent = filterSessionsForPeriod(sessions, 'week');
   if (!recent.length) return 0;
   return Math.round(recent.reduce((sum, s) => sum + s.durationSeconds, 0) / recent.length);
+}
+
+export function averageSessionDuration(sessions: FastingSession[]): number {
+  if (!sessions.length) return 0;
+  return Math.round(
+    sessions.reduce((sum, session) => sum + session.durationSeconds, 0) / sessions.length,
+  );
 }
 
 export function averageDurationForPeriod(
@@ -66,13 +102,7 @@ export function averageDurationForPeriod(
   period: StatsPeriod,
   now = new Date(),
 ): number {
-  let cutoff = 0;
-
-  if (period === 'week') cutoff = startOfWeek(now);
-  if (period === 'month') cutoff = startOfMonthTs(now);
-  if (period === 'year') cutoff = startOfYearTs(now);
-
-  const periodSessions = sessions.filter((session) => session.endTime >= cutoff);
+  const periodSessions = filterSessionsForPeriod(sessions, period, now);
   if (!periodSessions.length) return 0;
 
   return Math.round(
@@ -86,14 +116,7 @@ export function totalDurationForPeriod(
   period: StatsPeriod,
   now = new Date(),
 ): number {
-  let cutoff = 0;
-
-  if (period === 'week') cutoff = startOfWeek(now);
-  if (period === 'month') cutoff = startOfMonthTs(now);
-  if (period === 'year') cutoff = startOfYearTs(now);
-
-  return sessions
-    .filter((session) => session.endTime >= cutoff)
+  return filterSessionsForPeriod(sessions, period, now)
     .reduce((sum, session) => sum + session.durationSeconds, 0);
 }
 
@@ -102,10 +125,34 @@ export function longestFast(sessions: FastingSession[]): number {
   return Math.max(...sessions.map((s) => s.durationSeconds));
 }
 
+export function longestFastForPeriod(
+  sessions: FastingSession[],
+  period: StatsPeriod,
+  now = new Date(),
+): number {
+  return longestFast(filterSessionsForPeriod(sessions, period, now));
+}
+
 export function goalAchievementRate(sessions: FastingSession[]): number {
   if (!sessions.length) return 0;
   const achieved = sessions.filter((s) => s.goalReached).length;
   return Math.round((achieved / sessions.length) * 100);
+}
+
+export function goalAchievementRateForPeriod(
+  sessions: FastingSession[],
+  period: StatsPeriod,
+  now = new Date(),
+): number {
+  return goalAchievementRate(filterSessionsForPeriod(sessions, period, now));
+}
+
+export function totalFastsForPeriod(
+  sessions: FastingSession[],
+  period: StatsPeriod,
+  now = new Date(),
+): number {
+  return filterSessionsForPeriod(sessions, period, now).length;
 }
 
 export function computeWeekBars(sessions: FastingSession[]): BarData[] {

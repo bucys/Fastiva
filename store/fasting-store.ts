@@ -20,7 +20,7 @@ interface FastingStore {
   // ── actions ────────────────────────────────────────────
   startFast: () => Promise<void>;
   endFast: () => Promise<void>;
-  setGoal: (hours: number) => Promise<void>;
+  setGoal: (hours: number, options?: { applyToActiveFast?: boolean }) => Promise<void>;
   setFastingPlan: (fastHours: number | null, eatingHours: number | null) => Promise<void>;
   setFastingStartMinutes: (minutes: number | null) => Promise<void>;
   updateSetting: (key: keyof AppSettings, value: boolean) => Promise<void>;
@@ -42,7 +42,6 @@ export const useFastingStore = create<FastingStore>()(
       settings: {
         goalReachedNotif: true,
         reminderStart: false,
-        reminderEnd: true,
         fastingPlanFastHours: null,
         fastingPlanEatingHours: null,
         fastingStartMinutes: 18 * 60,
@@ -84,19 +83,23 @@ export const useFastingStore = create<FastingStore>()(
         await cancelGoalNotification();
       },
 
-      setGoal: async (hours) => {
+      setGoal: async (hours, options) => {
+        const applyToActiveFast = options?.applyToActiveFast ?? false;
+
         set((state) => ({
           goalHours: hours,
           activeFast: state.activeFast
-            ? { ...state.activeFast, goalHours: hours }
+            ? applyToActiveFast
+              ? { ...state.activeFast, goalHours: hours }
+              : state.activeFast
             : null,
         }));
 
-        // If a fast is active, reschedule the notification for the new goal time
+        // Only reschedule the current-fast notification when the active snapshot changes.
         const { activeFast, settings } = get();
-        if (activeFast && settings.goalReachedNotif) {
+        if (applyToActiveFast && activeFast && settings.goalReachedNotif) {
           const elapsed = Math.floor((Date.now() - activeFast.startTime) / 1000);
-          const remaining = Math.max(1, hours * 3600 - elapsed);
+          const remaining = Math.max(1, activeFast.goalHours * 3600 - elapsed);
           await scheduleGoalNotification(remaining);
         }
       },

@@ -67,6 +67,7 @@ function parseHourInput(value: string): number | null {
 
 export default function SettingsScreen() {
   const {
+    activeFast,
     goalHours,
     sessions,
     settings,
@@ -177,18 +178,62 @@ export default function SettingsScreen() {
     closeGoalModal();
   }
 
+  async function applyGoalSelectionToCurrentFast(hours: number) {
+    await setGoal(hours, { applyToActiveFast: true });
+    closeGoalModal();
+  }
+
+  async function applyGoalSelectionForNextFast(hours: number) {
+    await setGoal(hours, { applyToActiveFast: false });
+    closeGoalModal();
+  }
+
+  function confirmLongGoal(hours: number, onConfirm: () => void) {
+    if (hours <= LONG_FAST_CONFIRMATION_HOURS) {
+      onConfirm();
+      return;
+    }
+
+    Alert.alert(
+      'Long Fast Confirmation',
+      `Are you sure you want to fast for ${hours} hours?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          style: 'destructive',
+          onPress: onConfirm,
+        },
+      ],
+    );
+  }
+
   function confirmAndApplyGoal(hours: number) {
-    if (hours > LONG_FAST_CONFIRMATION_HOURS) {
+    if (hours === goalHours && !activeFast) {
+      closeGoalModal();
+      return;
+    }
+
+    if (activeFast && hours !== goalHours) {
       Alert.alert(
-        'Long Fast Confirmation',
-        `Are you sure you want to fast for ${hours} hours?`,
+        'Apply new goal?',
+        'You have an active fast in progress.\nDo you want to apply the new goal to the current fast, or only use it for the next fast?',
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Confirm',
-            style: 'destructive',
+            text: 'Only for next fast',
             onPress: () => {
-              void applyGoalSelection(hours);
+              confirmLongGoal(hours, () => {
+                void applyGoalSelectionForNextFast(hours);
+              });
+            },
+          },
+          {
+            text: 'Apply to current fast',
+            onPress: () => {
+              confirmLongGoal(hours, () => {
+                void applyGoalSelectionToCurrentFast(hours);
+              });
             },
           },
         ],
@@ -196,7 +241,9 @@ export default function SettingsScreen() {
       return;
     }
 
-    void applyGoalSelection(hours);
+    confirmLongGoal(hours, () => {
+      void applyGoalSelection(hours);
+    });
   }
 
   function handleCustomGoalSave() {
@@ -346,12 +393,6 @@ export default function SettingsScreen() {
               onToggleChange={(value) => updateSetting('reminderStart', value)}
             />
           ) : null}
-          <SettingsRow
-            label="Reminder to End"
-            isToggle
-            toggleValue={settings.reminderEnd}
-            onToggleChange={(value) => updateSetting('reminderEnd', value)}
-          />
         </SectionCard>
 
         <SectionCard title="General">

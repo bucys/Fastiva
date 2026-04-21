@@ -21,6 +21,7 @@ import { useFastingStore } from '@/store/fasting-store';
 import { formatDuration, formatSessionDate, formatTime24 } from '@/utils/format';
 import { FastingSession } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import { getSessionCompletionPercent, getSessionStatus } from '@/utils/stats';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -47,19 +48,6 @@ function getLongestSessionForDay(sessions: FastingSession[], date: Date): Fastin
   return daySessions.reduce((longest, session) =>
     session.durationSeconds > longest.durationSeconds ? session : longest,
   );
-}
-
-function getSessionCompletionPercent(session: FastingSession): number {
-  const goalSeconds = session.goalHours * 3600;
-  if (goalSeconds <= 0) return 0;
-  return Math.round((session.durationSeconds / goalSeconds) * 100);
-}
-
-function getSessionStatus(session: FastingSession): 'Goal reached' | 'Partial' | 'Missed' {
-  const percent = getSessionCompletionPercent(session);
-  if (percent >= 100) return 'Goal reached';
-  if (percent >= 70) return 'Partial';
-  return 'Missed';
 }
 
 function formatCalendarDuration(seconds: number): string {
@@ -157,7 +145,7 @@ function DayDetails({ sessions, selectedDate }: DayDetailsProps) {
   const completionPercent = getSessionCompletionPercent(session);
   const status = getSessionStatus(session);
   const statusColor =
-    status === 'Goal reached'
+    status === 'Goal met'
       ? Colors.success
       : status === 'Partial'
       ? Colors.warning
@@ -287,7 +275,7 @@ export default function HistoryScreen() {
                 startTime={formatTime24(session.startTime)}
                 endTime={formatTime24(session.endTime)}
                 duration={formatDuration(session.durationSeconds)}
-                goalReached={session.goalReached}
+                status={getSessionStatus(session)}
                 onDelete={() => confirmDelete(session)}
               />
             ))

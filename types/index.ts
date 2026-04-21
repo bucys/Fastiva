@@ -15,7 +15,6 @@ export interface ActiveFast {
 export interface AppSettings {
   goalReachedNotif: boolean;
   reminderStart: boolean;
-  reminderEnd: boolean;
   fastingPlanFastHours: number | null;
   fastingPlanEatingHours: number | null;
   fastingStartMinutes: number | null;

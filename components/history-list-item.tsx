@@ -8,7 +8,7 @@ interface Props {
   startTime: string;
   endTime: string;
   duration: string;
-  goalReached: boolean;
+  status: 'Goal met' | 'Partial' | 'Missed';
   onDelete?: () => void;
 }
 
@@ -17,10 +17,11 @@ export default function HistoryListItem({
   startTime,
   endTime,
   duration,
-  goalReached,
+  status,
   onDelete,
 }: Props) {
-  const accentColor = goalReached ? Colors.success : Colors.warning;
+  const accentColor =
+    status === 'Goal met' ? Colors.success : status === 'Partial' ? Colors.warning : '#EF4444';
 
   function renderRightActions() {
     if (!onDelete) return null;
@@ -47,10 +48,17 @@ export default function HistoryListItem({
           <View style={styles.topRowRight}>
             <View style={[
               styles.badge,
-              { backgroundColor: goalReached ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)' },
+              {
+                backgroundColor:
+                  status === 'Goal met'
+                    ? 'rgba(34,197,94,0.12)'
+                    : status === 'Partial'
+                    ? 'rgba(245,158,11,0.12)'
+                    : 'rgba(239,68,68,0.12)',
+              },
             ]}>
               <Text style={[styles.badgeText, { color: accentColor }]}>
-                {goalReached ? 'Goal met' : 'Partial'}
+                {status}
               </Text>
             </View>
           </View>

@@ -9,8 +9,8 @@ import { Colors, Spacing, Typography } from '@/constants/theme';
 import { useFastingStore } from '@/store/fasting-store';
 import { formatDuration, formatElapsed } from '@/utils/format';
 import {
+  averageSessionDuration,
   computeStreak,
-  weeklyAverage,
 } from '@/utils/stats';
 
 export default function HomeScreen() {
@@ -68,7 +68,7 @@ export default function HomeScreen() {
 
   const streak = computeStreak(sessions);
   const lastFastSec = sessions[0]?.durationSeconds ?? 0;
-  const weekAvgSec = weeklyAverage(sessions);
+  const avgFastSec = averageSessionDuration(sessions);
 
   const isActive = _hasHydrated && !!activeFast;
 
@@ -136,8 +136,8 @@ export default function HomeScreen() {
             value={lastFastSec > 0 ? formatDuration(lastFastSec) : '—'}
           />
           <SmallMetricCard
-            label="Avg/Week"
-            value={weekAvgSec > 0 ? formatDuration(weekAvgSec) : '—'}
+            label="Avg Fast"
+            value={avgFastSec > 0 ? formatDuration(avgFastSec) : '—'}
           />
         </View>
       </ScrollView>
