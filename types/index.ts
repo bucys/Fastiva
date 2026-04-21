@@ -16,7 +16,9 @@ export interface AppSettings {
   goalReachedNotif: boolean;
   reminderStart: boolean;
   reminderEnd: boolean;
-  darkMode: boolean;
+  fastingPlanFastHours: number | null;
+  fastingPlanEatingHours: number | null;
+  fastingStartMinutes: number | null;
 }
 
 export interface BarData {

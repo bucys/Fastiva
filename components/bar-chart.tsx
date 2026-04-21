@@ -4,13 +4,12 @@ import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 
 interface Props {
   data: BarData[];
-  unit?: string;
   highlightIndex?: number;
 }
 
 const BAR_MAX_HEIGHT = 100;
 
-export default function BarChart({ data, unit = 'h', highlightIndex }: Props) {
+export default function BarChart({ data, highlightIndex }: Props) {
   const maxValue = Math.max(...data.map((d) => d.value), 1);
 
   return (
@@ -22,13 +21,6 @@ export default function BarChart({ data, unit = 'h', highlightIndex }: Props) {
           const hasValue = item.value > 0;
           return (
             <View key={i} style={styles.barColumn}>
-              {hasValue ? (
-                <Text style={styles.valueLabel}>
-                  {item.value}{unit}
-                </Text>
-              ) : (
-                <Text style={styles.valueLabelEmpty}> </Text>
-              )}
               <View style={styles.barTrack}>
                 <View
                   style={[
@@ -68,7 +60,7 @@ const styles = StyleSheet.create({
   barColumn: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   barTrack: {
     height: BAR_MAX_HEIGHT,
@@ -79,17 +71,10 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: Radius.sm,
   },
-  valueLabel: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.weights.medium,
-  },
-  valueLabelEmpty: {
-    fontSize: Typography.sizes.sm,
-  },
   dayLabel: {
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
     fontWeight: Typography.weights.medium,
+    fontVariant: ['tabular-nums'],
   },
 });

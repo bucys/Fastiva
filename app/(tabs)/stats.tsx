@@ -7,29 +7,34 @@ import StatCard from '@/components/stat-card';
 import BarChart from '@/components/bar-chart';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { useFastingStore } from '@/store/fasting-store';
-import { MOCK_SESSIONS, MOCK_MONTH_BARS, MOCK_YEAR_BARS } from '@/utils/mock-data';
 import { formatDuration } from '@/utils/format';
 import {
+  averageDurationForPeriod,
   computeStreak,
   computeMonthBars,
   computeWeekBars,
   computeYearBars,
   goalAchievementRate,
   longestFast,
-  weeklyAverage,
+  StatsPeriod,
+  totalDurationForPeriod,
 } from '@/utils/stats';
 
 const CHART_LABELS = ['Daily fasting hours', 'Weekly fasting hours', 'Monthly fasting hours'];
+const PERIODS: StatsPeriod[] = ['week', 'month', 'year'];
+const PERIOD_AVERAGE_LABELS: Record<StatsPeriod, string> = {
+  week: 'Weekly Average',
+  month: 'Monthly Average',
+  year: 'Yearly Average',
+};
 
 export default function StatsScreen() {
   const [tab, setTab] = useState(0);
-  const { sessions: storedSessions } = useFastingStore();
+  const { sessions } = useFastingStore();
+  const selectedPeriod = PERIODS[tab];
 
-  // Prefer real sessions; fall back to mock so the UI is never empty
-  const sessions = storedSessions.length > 0 ? storedSessions : MOCK_SESSIONS;
-  const usingMock = storedSessions.length === 0;
-
-  const weekAvgSec = weeklyAverage(sessions);
+  const averageSec = averageDurationForPeriod(sessions, selectedPeriod);
+  const totalDurationSec = totalDurationForPeriod(sessions, selectedPeriod);
   const longestSec = longestFast(sessions);
   const total = sessions.length;
   const goalRate = goalAchievementRate(sessions);
@@ -37,16 +42,10 @@ export default function StatsScreen() {
 
   // Only compute heavy chart data when needed
   const bars = useMemo(() => {
-    if (tab === 0) return computeWeekBars(usingMock ? MOCK_SESSIONS : storedSessions);
-    if (tab === 1) return computeMonthBars(usingMock ? MOCK_SESSIONS : storedSessions);
-    return computeYearBars(usingMock ? MOCK_SESSIONS : storedSessions);
-  }, [tab, storedSessions, usingMock]);
-
-  // For empty real sessions fall back to readable mock bars
-  const displayBars =
-    bars.every((b) => b.value === 0) && usingMock
-      ? tab === 1 ? MOCK_MONTH_BARS : tab === 2 ? MOCK_YEAR_BARS : bars
-      : bars;
+    if (tab === 0) return computeWeekBars(sessions);
+    if (tab === 1) return computeMonthBars(sessions);
+    return computeYearBars(sessions);
+  }, [tab, sessions]);
 
   return (
     <ScreenContainer>
@@ -62,8 +61,8 @@ export default function StatsScreen() {
         <View style={styles.grid}>
           <View style={styles.gridRow}>
             <StatCard
-              label="Weekly Average"
-              value={weekAvgSec > 0 ? formatDuration(weekAvgSec) : '—'}
+              label={PERIOD_AVERAGE_LABELS[selectedPeriod]}
+              value={averageSec > 0 ? formatDuration(averageSec) : '—'}
             />
             <StatCard
               label="Longest Fast"
@@ -72,11 +71,13 @@ export default function StatsScreen() {
             />
           </View>
           <View style={styles.gridRow}>
-            <StatCard label="Total Fasts" value={String(total)} />
             <StatCard
-              label="Goal Achieved"
-              value={total > 0 ? `${goalRate}%` : '—'}
-              accent
+              label="Total Fasting Time"
+              value={totalDurationSec > 0 ? formatDuration(totalDurationSec) : '—'}
+            />
+            <StatCard
+              label="Total Fasts"
+              value={String(total)}
             />
           </View>
           <View style={styles.gridRow}>
@@ -84,13 +85,18 @@ export default function StatsScreen() {
               label="Current Streak"
               value={streak > 0 ? `${streak}d` : '—'}
             />
+            <StatCard
+              label="Goal Achieved"
+              value={`${goalRate}%`}
+              accent
+            />
           </View>
         </View>
 
         {/* bar chart */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>{CHART_LABELS[tab]}</Text>
-          <BarChart data={displayBars} unit="h" />
+          <BarChart data={bars} />
         </View>
 
         <View style={styles.bottomPad} />

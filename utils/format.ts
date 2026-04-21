@@ -13,13 +13,16 @@ export function formatDuration(seconds: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-export function formatTime12(timestamp: number): string {
+export function formatTime24(timestamp: number): string {
   const date = new Date(timestamp);
-  let h = date.getHours();
-  const m = date.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+  return formatMinutes24(date.getHours() * 60 + date.getMinutes());
+}
+
+export function formatMinutes24(totalMinutes: number): string {
+  const normalized = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hours = Math.floor(normalized / 60);
+  const minutes = normalized % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 export function formatSessionDate(timestamp: number): string {

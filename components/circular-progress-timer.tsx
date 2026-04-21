@@ -22,17 +22,32 @@ export default function CircularProgressTimer({ progress, elapsedSeconds, isActi
   const clamped = Math.min(1, Math.max(0, progress));
   const strokeDashoffset = CIRCUMFERENCE * (1 - clamped);
   const goalReached = progress >= 1;
+  const nearingGoal = progress >= 0.7 && progress < 1;
+  const progressGradientId = goalReached
+    ? 'progressGradSuccess'
+    : nearingGoal
+    ? 'progressGradBoost'
+    : 'progressGradBrand';
 
-  const arcColor = goalReached ? Colors.success : 'url(#progressGrad)';
+  const arcColor = goalReached ? Colors.success : `url(#${progressGradientId})`;
+  const timeColor = goalReached ? Colors.success : nearingGoal ? '#86EFAC' : Colors.textPrimary;
+  const percentColor = goalReached ? Colors.success : nearingGoal ? '#BBF7D0' : Colors.textSecondary;
 
   return (
     <View style={styles.wrapper}>
       <Svg width={SIZE} height={SIZE}>
         <Defs>
-          {/* Gradient flows top→right so color shifts from purple to blue as arc sweeps clockwise */}
-          <LinearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+          <LinearGradient id="progressGradBrand" x1="0%" y1="0%" x2="100%" y2="50%">
             <Stop offset="0%" stopColor={Colors.primary} stopOpacity={1} />
             <Stop offset="100%" stopColor={Colors.secondary} stopOpacity={1} />
+          </LinearGradient>
+          <LinearGradient id="progressGradBoost" x1="0%" y1="0%" x2="100%" y2="50%">
+            <Stop offset="0%" stopColor="#8B5CF6" stopOpacity={1} />
+            <Stop offset="100%" stopColor="#34D399" stopOpacity={1} />
+          </LinearGradient>
+          <LinearGradient id="progressGradSuccess" x1="0%" y1="0%" x2="100%" y2="50%">
+            <Stop offset="0%" stopColor="#22C55E" stopOpacity={1} />
+            <Stop offset="100%" stopColor="#4ADE80" stopOpacity={1} />
           </LinearGradient>
         </Defs>
 
@@ -69,10 +84,12 @@ export default function CircularProgressTimer({ progress, elapsedSeconds, isActi
         {isActive ? (
           <>
             <Text style={styles.statusLabel}>{goalReached ? 'DONE' : 'FASTING'}</Text>
-            <Text style={[styles.timeText, goalReached && { color: Colors.success }]}>
+            <Text style={[styles.timeText, { color: timeColor }]}>
               {formatElapsed(elapsedSeconds)}
             </Text>
-            <Text style={styles.percentText}>{Math.min(100, Math.round(clamped * 100))}%</Text>
+            <Text style={[styles.percentText, { color: percentColor }]}>
+              {Math.min(100, Math.round(clamped * 100))}%
+            </Text>
           </>
         ) : (
           <>

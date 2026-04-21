@@ -9,6 +9,8 @@ interface Props {
   toggleValue?: boolean;
   onToggleChange?: (val: boolean) => void;
   onPress?: () => void;
+  showChevron?: boolean;
+  danger?: boolean;
 }
 
 export default function SettingsRow({
@@ -18,10 +20,16 @@ export default function SettingsRow({
   toggleValue = false,
   onToggleChange,
   onPress,
+  showChevron = !isToggle && !!onPress,
+  danger = false,
 }: Props) {
+  const textColor = danger ? '#EF4444' : Colors.textPrimary;
+  const valueColor = danger ? '#FCA5A5' : Colors.textSecondary;
+  const chevronColor = danger ? '#F87171' : Colors.textSecondary;
+
   const content = (
     <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: textColor }]}>{label}</Text>
       {isToggle ? (
         <Switch
           value={toggleValue}
@@ -32,14 +40,16 @@ export default function SettingsRow({
         />
       ) : (
         <View style={styles.right}>
-          {value ? <Text style={styles.value}>{value}</Text> : null}
-          <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
+          {value ? <Text style={[styles.value, { color: valueColor }]}>{value}</Text> : null}
+          {showChevron ? (
+            <Ionicons name="chevron-forward" size={16} color={chevronColor} />
+          ) : null}
         </View>
       )}
     </View>
   );
 
-  if (isToggle) return content;
+  if (isToggle || !onPress) return content;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.65}>

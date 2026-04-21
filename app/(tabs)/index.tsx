@@ -7,11 +7,9 @@ import PrimaryButton from '@/components/primary-button';
 import SmallMetricCard from '@/components/small-metric-card';
 import { Colors, Spacing, Typography } from '@/constants/theme';
 import { useFastingStore } from '@/store/fasting-store';
-import { MOCK_SESSIONS } from '@/utils/mock-data';
 import { formatDuration, formatElapsed } from '@/utils/format';
 import {
   computeStreak,
-  longestFast,
   weeklyAverage,
 } from '@/utils/stats';
 
@@ -62,17 +60,15 @@ export default function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFast]);
 
-  const goalSeconds = goalHours * 3600;
+  const currentGoalHours = activeFast?.goalHours ?? goalHours;
+  const goalSeconds = currentGoalHours * 3600;
   const progress = goalSeconds > 0 ? elapsedSeconds / goalSeconds : 0;
   const goalReached = elapsedSeconds >= goalSeconds && !!activeFast;
   const remaining = Math.max(0, goalSeconds - elapsedSeconds);
 
-  // Stats — prefer real sessions, fall back to mock when empty
-  const displaySessions = sessions.length > 0 ? sessions : MOCK_SESSIONS;
-  const streak = computeStreak(displaySessions);
-  const lastFastSec = displaySessions[0]?.durationSeconds ?? 0;
-  const longestSec = longestFast(displaySessions);
-  const weekAvgSec = weeklyAverage(displaySessions);
+  const streak = computeStreak(sessions);
+  const lastFastSec = sessions[0]?.durationSeconds ?? 0;
+  const weekAvgSec = weeklyAverage(sessions);
 
   const isActive = _hasHydrated && !!activeFast;
 
@@ -93,7 +89,7 @@ export default function HomeScreen() {
         {/* header */}
         <View style={styles.topSection}>
           <Text style={styles.currentFastLabel}>Current Fast</Text>
-          <GoalPill hours={goalHours} />
+          <GoalPill hours={currentGoalHours} />
         </View>
 
         {/* timer */}

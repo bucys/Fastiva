@@ -3,8 +3,10 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActiveFast, AppSettings, FastingSession } from '@/types';
 import {
+  cancelStartReminderNotification,
   scheduleGoalNotification,
   cancelGoalNotification,
+  scheduleStartReminderNotification,
 } from '@/services/notifications';
 
 interface FastingStore {
@@ -19,8 +21,16 @@ interface FastingStore {
   startFast: () => Promise<void>;
   endFast: () => Promise<void>;
   setGoal: (hours: number) => Promise<void>;
+  setFastingPlan: (fastHours: number | null, eatingHours: number | null) => Promise<void>;
+  setFastingStartMinutes: (minutes: number | null) => Promise<void>;
   updateSetting: (key: keyof AppSettings, value: boolean) => Promise<void>;
+  deleteSession: (id: string) => void;
+  clearHistory: () => void;
   _setHasHydrated: (v: boolean) => void;
+}
+
+function isPlanEnabled(settings: AppSettings): boolean {
+  return settings.fastingPlanFastHours != null && settings.fastingPlanEatingHours != null;
 }
 
 export const useFastingStore = create<FastingStore>()(
@@ -33,7 +43,9 @@ export const useFastingStore = create<FastingStore>()(
         goalReachedNotif: true,
         reminderStart: false,
         reminderEnd: true,
-        darkMode: true,
+        fastingPlanFastHours: null,
+        fastingPlanEatingHours: null,
+        fastingStartMinutes: 18 * 60,
       },
       _hasHydrated: false,
 
@@ -73,7 +85,12 @@ export const useFastingStore = create<FastingStore>()(
       },
 
       setGoal: async (hours) => {
-        set({ goalHours: hours });
+        set((state) => ({
+          goalHours: hours,
+          activeFast: state.activeFast
+            ? { ...state.activeFast, goalHours: hours }
+            : null,
+        }));
 
         // If a fast is active, reschedule the notification for the new goal time
         const { activeFast, settings } = get();
@@ -81,6 +98,39 @@ export const useFastingStore = create<FastingStore>()(
           const elapsed = Math.floor((Date.now() - activeFast.startTime) / 1000);
           const remaining = Math.max(1, hours * 3600 - elapsed);
           await scheduleGoalNotification(remaining);
+        }
+      },
+
+      setFastingPlan: async (fastHours, eatingHours) => {
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            fastingPlanFastHours: fastHours,
+            fastingPlanEatingHours: eatingHours,
+          },
+        }));
+
+        const { settings } = get();
+        if (settings.reminderStart && isPlanEnabled(settings) && settings.fastingStartMinutes != null) {
+          await scheduleStartReminderNotification(settings.fastingStartMinutes);
+        } else {
+          await cancelStartReminderNotification();
+        }
+      },
+
+      setFastingStartMinutes: async (minutes) => {
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            fastingStartMinutes: minutes,
+          },
+        }));
+
+        const { settings } = get();
+        if (settings.reminderStart && isPlanEnabled(settings) && minutes != null) {
+          await scheduleStartReminderNotification(minutes);
+        } else {
+          await cancelStartReminderNotification();
         }
       },
 
@@ -102,6 +152,25 @@ export const useFastingStore = create<FastingStore>()(
             }
           }
         }
+
+        if (key === 'reminderStart') {
+          const { settings } = get();
+          if (value && isPlanEnabled(settings) && settings.fastingStartMinutes != null) {
+            await scheduleStartReminderNotification(settings.fastingStartMinutes);
+          } else {
+            await cancelStartReminderNotification();
+          }
+        }
+      },
+
+      deleteSession: (id) => {
+        set((state) => ({
+          sessions: state.sessions.filter((session) => session.id !== id),
+        }));
+      },
+
+      clearHistory: () => {
+        set({ sessions: [] });
       },
 
       _setHasHydrated: (v) => set({ _hasHydrated: v }),
