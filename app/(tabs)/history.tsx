@@ -265,8 +265,10 @@ export default function HistoryScreen() {
           {tab === 0 && (
             <Text style={styles.sectionLabel}>Recent Sessions</Text>
           )}
-          {sessions.length === 0 ? (
-            <Text style={styles.emptyText}>No fasting sessions yet. Start your first fast!</Text>
+          {(tab === 0 ? recentSessions.length === 0 : sessions.length === 0) ? (
+            <Text style={styles.emptyText}>
+              No fasting sessions yet. Start your first fast!
+            </Text>
           ) : (
             (tab === 0 ? recentSessions : sessions).map((session) => (
               <HistoryListItem
