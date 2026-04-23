@@ -22,6 +22,7 @@ The app allows users to track fasting sessions, manage goals, view history, and 
     <td><img src="./assets/screenshots/Settings.PNG" width="250"/></td>
   </tr>
 </table>
+
 ## Features
 
 - Start and end fasting sessions
