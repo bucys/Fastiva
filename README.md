@@ -10,10 +10,10 @@ The app allows users to track fasting sessions, manage goals, view history, and 
 
 ## Screenshots
 
-<img src="./assets/screenshots/home.png" width="250" />
-<img src="./assets/screenshots/history.png" width="250" />
-<img src="./assets/screenshots/stats.png" width="250" />
-<img src="./assets/screenshots/settings.png" width="250" />
+<img src="./assets/screenshots/Home.png" width="250" />
+<img src="./assets/screenshots/History.png" width="250" />
+<img src="./assets/screenshots/Stats.png" width="250" />
+<img src="./assets/screenshots/Settings.png" width="250" />
 
 ## Features
 
