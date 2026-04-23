@@ -8,6 +8,13 @@ Fastiva is a mobile-first fasting tracker focused on clean UX and clear product 
 
 The app allows users to track fasting sessions, manage goals, view history, and analyze progress through intuitive charts.
 
+## Screenshots
+
+<img src="./assets/screenshots/home.png" width="250" />
+<img src="./assets/screenshots/history.png" width="250" />
+<img src="./assets/screenshots/stats.png" width="250" />
+<img src="./assets/screenshots/settings.png" width="250" />
+
 ## Features
 
 - Start and end fasting sessions
