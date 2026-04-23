@@ -78,6 +78,7 @@ function CalendarView({ sessions, visibleMonth, selectedDate, onSelectDate }: Ca
           if (!date) return <View key={i} style={styles.cell} />;
           const key = format(date, 'yyyy-MM-dd');
           const longestSession = getLongestSessionForDay(sessions, date);
+          const hasCompletedFast = !!longestSession;
           const isToday = isSameDay(date, today);
           const isSelected = isSameDay(date, selectedDate);
           const isInMonth = isSameMonth(date, visibleMonth);
@@ -91,9 +92,10 @@ function CalendarView({ sessions, visibleMonth, selectedDate, onSelectDate }: Ca
             >
               <View style={[
                 styles.dayCell,
+                hasCompletedFast && styles.dayCellHasSession,
+                goalReached && styles.dayCellGoalReached,
                 isToday && styles.dayCellToday,
                 isSelected && styles.dayCellSelected,
-                goalReached && styles.dayCellGoalReached,
                 !isInMonth && styles.dayCellOutsideMonth,
               ]}>
                 <Text style={[
@@ -350,6 +352,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 3,
+  },
+  dayCellHasSession: {
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.38)',
   },
   dayCellToday: {
     borderWidth: 1,

@@ -31,6 +31,7 @@ const PERIOD_AVERAGE_LABELS: Record<StatsPeriod, string> = {
 
 export default function StatsScreen() {
   const [tab, setTab] = useState(0);
+  const [selectedBarIndex, setSelectedBarIndex] = useState<number | null>(null);
   const { sessions } = useFastingStore();
   const selectedPeriod = PERIODS[tab];
 
@@ -48,6 +49,15 @@ export default function StatsScreen() {
     return computeYearBars(sessions);
   }, [tab, sessions]);
 
+  function handleSelectTab(nextTab: number) {
+    setTab(nextTab);
+    setSelectedBarIndex(null);
+  }
+
+  function handleSelectBar(index: number) {
+    setSelectedBarIndex((current) => (current === index ? null : index));
+  }
+
   return (
     <ScreenContainer>
       <ScreenHeader title="Stats" />
@@ -55,7 +65,7 @@ export default function StatsScreen() {
         <SegmentedControl
           options={['Week', 'Month', 'Year']}
           selected={tab}
-          onSelect={setTab}
+          onSelect={handleSelectTab}
         />
 
         {/* 2×2 stat grid */}
@@ -97,7 +107,12 @@ export default function StatsScreen() {
         {/* bar chart */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>{CHART_LABELS[tab]}</Text>
-          <BarChart data={bars} />
+          <BarChart
+            data={bars}
+            highlightIndex={selectedBarIndex ?? undefined}
+            onSelectBar={handleSelectBar}
+            onClearSelection={() => setSelectedBarIndex(null)}
+          />
         </View>
 
         <View style={styles.bottomPad} />

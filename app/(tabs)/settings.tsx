@@ -20,6 +20,7 @@ import SettingsRow from '@/components/settings-row';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { exportSessionsCsv, getCompletedSessions, shareExportedFile } from '@/services/export';
 import { useFastingStore } from '@/store/fasting-store';
+import { buildDemoSessions, isDemoSession } from '@/utils/demo-data';
 import { formatMinutes24 } from '@/utils/format';
 
 const GOAL_PRESETS = [12, 14, 16, 18, 20] as const;
@@ -75,6 +76,8 @@ export default function SettingsScreen() {
     setFastingPlan,
     setFastingStartMinutes,
     updateSetting,
+    seedDemoSessions,
+    clearDemoSessions,
     clearHistory,
   } = useFastingStore();
 
@@ -101,6 +104,8 @@ export default function SettingsScreen() {
 
   const hasFastingPlan =
     settings.fastingPlanFastHours != null && settings.fastingPlanEatingHours != null;
+  const hasDemoSessions = sessions.some(isDemoSession);
+  const hasRealSessions = sessions.some((session) => !isDemoSession(session));
 
   const fastingPlanLabel = formatPlanValue(
     settings.fastingPlanFastHours,
@@ -405,6 +410,74 @@ export default function SettingsScreen() {
     );
   }
 
+  function handleLoadDemoData() {
+    const demoSessions = buildDemoSessions();
+
+    if (!sessions.length) {
+      seedDemoSessions(demoSessions, { replaceExisting: true });
+      Alert.alert('Demo Data Loaded', 'Development demo sessions were added successfully.');
+      return;
+    }
+
+    Alert.alert(
+      'Load Demo Data',
+      'Choose how you want to use development demo sessions.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Append Demo Data',
+          onPress: () => {
+            seedDemoSessions(demoSessions, { replaceExisting: false });
+            Alert.alert('Demo Data Loaded', 'Development demo sessions were appended.');
+          },
+        },
+        {
+          text: 'Replace All Sessions',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Replace Existing Sessions?',
+              'This will replace the currently stored session list with development demo data.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Replace',
+                  style: 'destructive',
+                  onPress: () => {
+                    seedDemoSessions(demoSessions, { replaceExisting: true });
+                    Alert.alert('Demo Data Loaded', 'Stored sessions were replaced with development demo data.');
+                  },
+                },
+              ],
+            );
+          },
+        },
+      ],
+    );
+  }
+
+  function handleClearDemoData() {
+    if (!hasDemoSessions) {
+      Alert.alert('No Demo Data', 'There are no development demo sessions to clear.');
+      return;
+    }
+
+    Alert.alert(
+      'Clear Demo Data',
+      hasRealSessions
+        ? 'This will remove only the demo/test sessions and keep your real sessions.'
+        : 'This will remove all currently seeded demo/test sessions.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Demo Data',
+          style: 'destructive',
+          onPress: () => clearDemoSessions(),
+        },
+      ],
+    );
+  }
+
   return (
     <ScreenContainer>
       <ScreenHeader title="Settings" />
@@ -456,6 +529,22 @@ export default function SettingsScreen() {
             danger
           />
         </SectionCard>
+
+        {__DEV__ ? (
+          <SectionCard title="Development">
+            <SettingsRow
+              label="Load Demo Data"
+              onPress={handleLoadDemoData}
+              value={hasDemoSessions ? 'Refresh available' : undefined}
+            />
+            <SettingsRow
+              label="Clear Demo/Test Data"
+              onPress={handleClearDemoData}
+              value={hasDemoSessions ? 'Remove seeded sessions' : undefined}
+              danger={hasDemoSessions}
+            />
+          </SectionCard>
+        ) : null}
 
         <Text style={styles.footer}>Fastiva · Built with care</Text>
       </ScrollView>

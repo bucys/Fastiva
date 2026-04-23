@@ -8,6 +8,7 @@ import {
   cancelGoalNotification,
   scheduleStartReminderNotification,
 } from '@/services/notifications';
+import { isDemoSession } from '@/utils/demo-data';
 
 interface FastingStore {
   // ── state ──────────────────────────────────────────────
@@ -24,6 +25,8 @@ interface FastingStore {
   setFastingPlan: (fastHours: number | null, eatingHours: number | null) => Promise<void>;
   setFastingStartMinutes: (minutes: number | null) => Promise<void>;
   updateSetting: (key: keyof AppSettings, value: boolean) => Promise<void>;
+  seedDemoSessions: (demoSessions: FastingSession[], options?: { replaceExisting?: boolean }) => void;
+  clearDemoSessions: () => void;
   deleteSession: (id: string) => void;
   clearHistory: () => void;
   _setHasHydrated: (v: boolean) => void;
@@ -165,6 +168,26 @@ export const useFastingStore = create<FastingStore>()(
             await cancelStartReminderNotification();
           }
         }
+      },
+
+      seedDemoSessions: (demoSessions, options) => {
+        const replaceExisting = options?.replaceExisting ?? false;
+
+        set((state) => {
+          const nextSessions = replaceExisting
+            ? demoSessions
+            : [...state.sessions.filter((session) => !isDemoSession(session)), ...demoSessions];
+
+          nextSessions.sort((a, b) => b.endTime - a.endTime);
+
+          return { sessions: nextSessions };
+        });
+      },
+
+      clearDemoSessions: () => {
+        set((state) => ({
+          sessions: state.sessions.filter((session) => !isDemoSession(session)),
+        }));
       },
 
       deleteSession: (id) => {
