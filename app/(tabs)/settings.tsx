@@ -411,6 +411,8 @@ export default function SettingsScreen() {
   }
 
   function handleLoadDemoData() {
+    if (!__DEV__) return;
+
     const demoSessions = buildDemoSessions();
 
     if (!sessions.length) {
@@ -457,6 +459,8 @@ export default function SettingsScreen() {
   }
 
   function handleClearDemoData() {
+    if (!__DEV__) return;
+
     if (!hasDemoSessions) {
       Alert.alert('No Demo Data', 'There are no development demo sessions to clear.');
       return;

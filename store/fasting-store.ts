@@ -171,6 +171,8 @@ export const useFastingStore = create<FastingStore>()(
       },
 
       seedDemoSessions: (demoSessions, options) => {
+        if (!__DEV__) return;
+
         const replaceExisting = options?.replaceExisting ?? false;
 
         set((state) => {
@@ -185,6 +187,8 @@ export const useFastingStore = create<FastingStore>()(
       },
 
       clearDemoSessions: () => {
+        if (!__DEV__) return;
+
         set((state) => ({
           sessions: state.sessions.filter((session) => !isDemoSession(session)),
         }));
