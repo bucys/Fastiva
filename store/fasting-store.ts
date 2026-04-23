@@ -106,6 +106,7 @@ export const useFastingStore = create<FastingStore>()(
 
       setFastingPlan: async (fastHours, eatingHours) => {
         set((state) => ({
+          goalHours: fastHours ?? state.goalHours,
           settings: {
             ...state.settings,
             fastingPlanFastHours: fastHours,

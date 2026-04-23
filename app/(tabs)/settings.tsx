@@ -151,6 +151,14 @@ export default function SettingsScreen() {
   }
 
   function openGoalModal() {
+    if (hasFastingPlan) {
+      Alert.alert(
+        'Daily Goal is set by your plan',
+        'Turn Fasting Plan off if you want to change Daily Goal manually.',
+      );
+      return;
+    }
+
     setCustomGoalInput(String(goalHours));
     setCustomGoalVisible(!isPresetGoal(goalHours));
     setGoalModalVisible(true);
@@ -263,7 +271,45 @@ export default function SettingsScreen() {
   }
 
   async function handlePlanSelect(fastHours: number | null, eatingHours: number | null) {
+    if (fastHours == null || eatingHours == null) {
+      await setFastingPlan(null, null);
+      closePlanModal();
+      return;
+    }
+
+    if (activeFast && fastHours !== activeFast.goalHours) {
+      Alert.alert(
+        'Apply new goal?',
+        'You have an active fast in progress.\nDo you want to apply the new goal to the current fast, or only use it for the next fast?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Only for next fast',
+            onPress: () => {
+              void (async () => {
+                await setFastingPlan(fastHours, eatingHours);
+                await setGoal(fastHours, { applyToActiveFast: false });
+                closePlanModal();
+              })();
+            },
+          },
+          {
+            text: 'Apply to current fast',
+            onPress: () => {
+              void (async () => {
+                await setFastingPlan(fastHours, eatingHours);
+                await setGoal(fastHours, { applyToActiveFast: true });
+                closePlanModal();
+              })();
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     await setFastingPlan(fastHours, eatingHours);
+    await setGoal(fastHours, { applyToActiveFast: false });
     closePlanModal();
   }
 
@@ -508,7 +554,7 @@ export default function SettingsScreen() {
             >
               <View style={styles.modalCard}>
                 <Text style={styles.modalTitle}>Fasting Plan</Text>
-                <Text style={styles.modalSubtitle}>Choose an optional fasting schedule. Daily Goal stays separate.</Text>
+                <Text style={styles.modalSubtitle}>Choose an optional fasting schedule. When a plan is active, Daily Goal matches its fasting hours.</Text>
 
                 <View style={styles.goalOptions}>
                   <TouchableOpacity
