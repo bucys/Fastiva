@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# Fastiva
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Minimal intermittent fasting tracker built with Expo React Native.
 
-## Get started
+## Overview
 
-1. Install dependencies
+Fastiva is a mobile-first fasting tracker focused on clean UX and clear product logic.
 
-   ```bash
-   npm install
-   ```
+The app allows users to track fasting sessions, manage goals, view history, and analyze progress through intuitive charts.
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- Start and end fasting sessions
+- Daily fasting goal tracking
+- Optional fasting plans (12/12, 14/10, 16/8, 18/6, 20/4)
+- Smart goal handling during active fasts
+- Calendar-based history view
+- Weekly, monthly, and yearly stats
+- Interactive charts (tap to inspect values)
+- Local notifications (goal reached, fasting start)
+- CSV data export
+- Local-only data storage (no account required)
 
-In the output, you'll find options to open the app in a
+## Key Product Decisions
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Daily Goal vs Fasting Plan
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Daily Goal controls progress and completion
+- Fasting Plan is optional and used for scheduling
 
-## Get a fresh project
+### Active Fast Behavior
 
-When you're ready, run:
+When changing the goal during an active fast:
 
-```bash
-npm run reset-project
-```
+- Apply to current fast
+- Apply to next fast
+- Cancel
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### History Logic
 
-## Learn more
+- Calendar shows only the longest fast per day
+- Recent Sessions shows real session history
+- List view shows all sessions
 
-To learn more about developing your project with Expo, look at the following resources:
+## Tech Stack
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- Expo
+- React Native
+- TypeScript
+- Zustand
+- AsyncStorage
+- Expo Router
 
-## Join the community
+## Screens
 
-Join our community of developers creating universal apps.
+- Home — timer, progress, metrics
+- History — calendar + list
+- Stats — week/month/year charts
+- Settings — goals, plan, export, privacy
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Privacy
+
+All data is stored locally on the device.  
+No tracking, no accounts, no backend.
+
+## Status
+
+This project is a polished MVP built as a mobile portfolio app.
+
+## Future Improvements
+
+- Health integrations (Apple Health / Google Fit)
+- Cloud sync
+- Widgets
+- Advanced analytics
