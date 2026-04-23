@@ -2,6 +2,8 @@
 
 Minimal intermittent fasting tracker built with Expo React Native.
 
+> Mobile-first fasting tracker focused on clean UX and real product logic.
+
 ## Overview
 
 Fastiva is a mobile-first fasting tracker focused on clean UX and clear product logic.
@@ -22,6 +24,8 @@ The app allows users to track fasting sessions, manage goals, view history, and 
     <td><img src="./assets/screenshots/Settings.PNG" width="250"/></td>
   </tr>
 </table>
+
+> Note: This app runs locally via Expo. Screenshots are taken from a real device.
 
 ## Features
 
