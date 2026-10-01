@@ -1,0 +1,9 @@
+{
+  "tool": "jest",
+  "gate": null,
+  "additionalTools": ["jest-expo"],
+  "e2eTool": "none",
+  "testDir": "beside the source",
+  "filePattern": "*.test.ts",
+  "packageManager": "npm"
+}
